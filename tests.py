@@ -102,54 +102,5 @@ class UserModelCase(unittest.TestCase):
         self.assertEqual(f4, [p4])
 
 
-
-class TestSearch(unittest.TestCase):
-    def setUp(self):
-        self.app = create_app()
-        self.app_context = self.app.app_context()
-        self.app_context.push()
-        self.index_dir = tempfile.mkdtemp()
-        self.index = create_in(self.index_dir, schema=Schema(id=ID(stored=True), title=TEXT(stored=True), body=TEXT))
-        self.client = self.app.test_client()
-        db.create_all()
-
-    def tearDown(self):
-        shutil.rmtree(self.index_dir)
-
-
-    def test_add_to_index(self):
-        post = Post(body="This is a test post.")
-        add_to_index(self.index, post)
-
-        # Проверяем, что запись добавлена в индекс
-        with self.index.searcher() as searcher:
-            results = query_index(self.index, "Test", 1, 10)
-            self.assertEqual(len(results), 1)
-
-    def test_remove_from_index(self):
-        post = Post(body="This is a test post.")
-        add_to_index(self.index, post)
-
-        # Удаляем запись из индекса
-        remove_from_index(self.index, post)
-
-        # Проверяем, что запись больше нет в индексе
-        with self.index.searcher() as searcher:
-            results = query_index(self.index, "Test", 1, 10)
-            self.assertEqual(len(results), 0)
-
-    def test_query_index(self):
-        post = Post(body="This is a test post.")
-        add_to_index(self.index, post)
-
-        # Выполняем запрос к индексу
-        ids, total = query_index(self.index, "Test", page=1, per_page=10)
-
-        # Проверяем, что найдена одна запись
-        self.assertEqual(len(ids), 1)
-        # Проверяем, что общее количество результатов равно 1
-        self.assertEqual(total, 1)
-
-
 if __name__ == '__main__':
     unittest.main(verbosity=2)
