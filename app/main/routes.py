@@ -151,17 +151,17 @@ def translate_text():
 @bp.route('/search')
 @login_required
 def search():
+    g.search_form = SearchForm()
+
     if not g.search_form.validate():
         return redirect(url_for('main.explore'))
 
-    page = request.args.get('page', 1, type=int)
-    posts, total = Post.search(g.search_form.q.data, page, current_app.config['POSTS_PER_PAGE'])
-    logger.info('Search query: %s', g.search_form)
-    logger.info('Search results: %s', posts)
-    next_url = url_for('main.search', q=g.search_form.q.data, page=page + 1) \
-        if total > page * current_app.config['POSTS_PER_PAGE'] else None
-    prev_url = url_for('main.search', q=g.search_form.q.data, page=page - 1) \
-        if page > 1 else None
+    query = request.args.get('q', '')
+    if query:
+        posts = Post.query.filter(Post.body.contains(query)).all()
+        logger.info('Search query: %s', g.search_form)
+        logger.info('Search results: %s', posts)
+    else:
+        posts = []
 
-    return render_template('search.html', title=_('Search'), posts=posts,
-                           next_url=next_url, prev_url=prev_url, form=g.search_form)
+    return render_template('search.html', title=_('Search'), posts=posts, form=g.search_form)
