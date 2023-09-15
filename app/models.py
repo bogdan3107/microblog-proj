@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from app import db, login
 from app.search import add_to_index, remove_from_index, query_index
+from sqlalchemy import case, literal
 
 
 class SearchableMixin(object):
@@ -14,12 +15,22 @@ class SearchableMixin(object):
     def search(cls, expression, page, per_page):
         ids, total = query_index(cls.__tablename__, expression, page, per_page)
         if total == 0:
-            return cls.query.filter_by(id=0), 0
-        when = []
-        for i in range(len(ids)):
-            when.append((ids[i], i))
-        return cls.query.filter(cls.id.in_(ids)).order_by(
-            db.case(when, value=cls.id)), total
+            return [], 0
+        
+        whens = []
+        for id_ in ids:
+            whens.append((cls.id == id_, literal(id_)))
+        
+        case_stmts = [case([when for when, _ in whens], else_=cls.id)]
+        order_by_args = [literal(1).desc()]  # Use a constant for ordering
+        
+        for _, literal_id in whens:
+            order_by_args.append(case_stmts[0].when(literal_id, value=1))
+        
+        query = cls.query.filter(cls.id.in_(ids)).order_by(*order_by_args)
+        
+        return query.all(), total
+
 
     @classmethod
     def before_commit(cls, session):

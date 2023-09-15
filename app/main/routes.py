@@ -4,7 +4,7 @@ from flask import render_template, flash, redirect, url_for, request, g, \
 from flask_login import current_user, login_required
 from flask_babel import _, get_locale
 from guess_language import guess_language
-from app import db
+from app import db, logger
 from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm
 from app.models import User, Post
 from app.translate import translate
@@ -148,27 +148,20 @@ def translate_text():
     return response
 
 
-# Функция для выполнения поиска записей
 @bp.route('/search')
-@login_required  # Только для залогиненных пользователей
+@login_required
 def search():
-    # Проверяем, прошел ли поисковый запрос валидацию
     if not g.search_form.validate():
         return redirect(url_for('main.explore'))
 
-    # Получаем номер текущей страницы и параметры поиска
     page = request.args.get('page', 1, type=int)
-    # Выполняем поиск постов с использованием метода search
     posts, total = Post.search(g.search_form.q.data, page, current_app.config['POSTS_PER_PAGE'])
-    
-    # Вычисляем ссылку на следующую страницу, если она есть
+    logger.info('Search query: %s', g.search_form)
+    logger.info('Search results: %s', posts)
     next_url = url_for('main.search', q=g.search_form.q.data, page=page + 1) \
         if total > page * current_app.config['POSTS_PER_PAGE'] else None
-    
-    # Вычисляем ссылку на предыдущую страницу, если она есть
     prev_url = url_for('main.search', q=g.search_form.q.data, page=page - 1) \
         if page > 1 else None
-    
-    # Рендерим шаблон для отображения результатов поиска
+
     return render_template('search.html', title=_('Search'), posts=posts,
-                           next_url=next_url, prev_url=prev_url)
+                           next_url=next_url, prev_url=prev_url, form=g.search_form)
