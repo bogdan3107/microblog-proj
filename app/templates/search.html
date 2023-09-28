@@ -9,14 +9,14 @@
         <ul class="pager">
             <li class="previous{% if not prev_url %} disbaled{% endif %}">
                 <a href="{{ prev_url or '#' }}">
-                    <span aria-hidden="true">&larr:</span>
+                    <span aria-hidden="true">&larr;</span>
                     {{ _('Previous results') }}
                 </a>
             </li>
             <li class="next{% if not next_url %} disbaled{% endif %}">
                 <a href="{{ next_url or '#' }}">
                     {{ _('Next results') }}
-                    <span aria-hidden="true">&rarr:</span>
+                    <span aria-hidden="true">&rarr;</span>
                 </a>
             </li>
         </ul>

@@ -161,6 +161,7 @@ def search():
         posts = Post.query.filter(Post.body.contains(query)).all()
         logger.info('Search query: %s', g.search_form)
         logger.info('Search results: %s', posts)
+
     else:
         posts = []
 
