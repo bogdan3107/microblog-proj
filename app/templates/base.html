@@ -84,6 +84,7 @@
                 $(destElem).text("{{ _('Error: Could not contact server.') }}");
             });
         }
+        
         $(function () {
             var timer = null;
             var xhr = null;
@@ -130,6 +131,7 @@
             $('#message_count').text(n);
             $('#message_count').css('visibility', n ? 'visible' : 'hidden');
         }
+
         {% if current_user.is_authenticated %}
         $(function() {
             var since = null;
